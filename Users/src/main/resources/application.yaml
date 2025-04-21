@@ -18,6 +18,17 @@ spring:
   autoconfigure:
     exclude:
       - org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration
-  jwt:
-    secret: my-secret-key
-    expiration: 3600000  # 1 hour
+jwt:
+  secret: my-secret-key
+  expiration: 3600000  # 1 hour
+
+logging:
+  level:
+    root: DEBUG
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} - %-5level %logger{36} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss} - %-5level %logger{36} - %msg%n"
+  file:
+    name: logs/Application.log  #General system logs (ELK stack)
+    max-size: 10MB  # rotate after this size
+    max-history: 30  # keep logs for 30 days
