@@ -7,5 +7,5 @@ password VARCHAR,
 role VARCHAR
 );
 
-INSERT INTO users (email, password, role) VALUES ('admin@app.local', 'password', 'admin');
-INSERT INTO users (email, password, role) VALUES ('user@app.local', 'password', 'user')
+INSERT INTO users (email, hashed_email, password, role) VALUES ('admin@app.local', 'hjk', 'password', 'admin');
+INSERT INTO users (email, hashed_email, uuid, password, role) VALUES ('admin@app.com', '$2a$10$UUFXCjcoy2Jn2N768tYVC./h3gt.dRhPV3VF7.LTuDfVRFb4G5IBm',	'admin17',	'$2a$10$9ZonQlVi7feXSvW7Oi4Yr.Cdd8UE5D0MJZEsoOOlRBU2hmKsZ3cLm',	'user');

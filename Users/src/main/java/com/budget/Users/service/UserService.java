@@ -2,9 +2,13 @@ package com.budget.Users.service;
 
 import com.budget.Users.LogUtil;
 import com.budget.Users.model.User;
+import com.budget.Users.model.UserLogin;
 import com.budget.Users.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DuplicateKeyException;
+import org.springframework.dao.EmptyResultDataAccessException;
+import org.springframework.dao.IncorrectResultSizeDataAccessException;
+import org.springframework.security.crypto.bcrypt.BCrypt;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -38,6 +42,28 @@ public class UserService {
         }
     }
 
+    public boolean login (UserLogin loginUser){
+        try {
+            String storedPassword = userRepository.getUserByEmail(loginUser.getEmail());
+//            User user = userRepository.getUserByEmail(loginUser.getEmail());
+//            String storedPassword = user.getPassword();
+            if (encoder.matches(loginUser.getPassword(), storedPassword))
+                //TODO: Generate token
+                return true;
+            else
+                return false;
+        }catch (EmptyResultDataAccessException e) {
+            log.infoGeneral("Attempted login with non existing user: " + loginUser.getEmail());
+            return false;
+        }catch (IncorrectResultSizeDataAccessException e){
+            log.warnGeneral(e, "Duplicate E-mail found in DB" + loginUser.getEmail());
+            throw e;
+        }catch (Exception e){
+            log.debugGeneral(e);
+            throw e;
+        }
+    }
+
     private String uuidGenerator (String email){
         try {
             String userPortion = email.split("@")[0].toLowerCase();
@@ -51,7 +77,17 @@ public class UserService {
     }
 
     private String hashGenerator (String email){
-            return encoder.encode(email);
+        try {
+            byte[] hashedBytes = MessageDigest.getInstance("SHA-256").digest(email.getBytes());
+            StringBuilder sb = new StringBuilder();
+            for (byte b : hashedBytes){
+                sb.append(String.format("%02x", b));
+            }
+            return sb.toString();
+        } catch (NoSuchAlgorithmException e) {
+            throw new RuntimeException(e);
+        }
+//        return encoder.encode(email);
     }
 
     private String hashPassword (String password){
