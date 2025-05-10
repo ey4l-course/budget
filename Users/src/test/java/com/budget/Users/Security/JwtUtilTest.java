@@ -14,11 +14,12 @@ class JwtUtilTest {
 
     private JwtUtil jwtUtil;
     private String secretKey = "ThisIsASecretKeyThatIsLongEnough123456!";
-    private long expirationTime = 600_000; // 10 minutes in milliseconds
+    private long expirationTime = 600000; // 10 minutes
+    private long refreshExpirationTime = 14400000; // 4 hours
 
     @BeforeEach
     void setUp() {
-        jwtUtil = new JwtUtil(secretKey, expirationTime);
+        jwtUtil = new JwtUtil(secretKey, expirationTime, refreshExpirationTime);
     }
 
     @Test
@@ -48,7 +49,7 @@ class JwtUtilTest {
     @Test
     void testExpiredToken() throws InterruptedException {
         // Generate token with a very short expiration time (1 sec)
-        JwtUtil shortLivedJwtUtil = new JwtUtil(secretKey, 1000);
+        JwtUtil shortLivedJwtUtil = new JwtUtil(secretKey, 1000, 3000);
         String uuid = UUID.randomUUID().toString();
         String token = shortLivedJwtUtil.generateToken(uuid);
 

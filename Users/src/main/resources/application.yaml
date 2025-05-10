@@ -19,8 +19,11 @@ spring:
     exclude:
       - org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration
 jwt:
-  secret: my-secret-key
-  expiration: 3600000  # 1 hour
+  secret: my-secret-keyVg7sD8kPhz9qLxWYeN4pZfU2VmG6QsTtNxYu5aYxP0k
+  access:
+    expiration: 90000  # 15 minutes
+  refresh:
+    expiration: 14400000 # 4 hours
 
 logging:
   level:

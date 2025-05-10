@@ -1,10 +1,12 @@
 package com.budget.Users.controller;
 
 import com.budget.Users.LogUtil;
+import com.budget.Users.model.AuthResponse;
 import com.budget.Users.model.User;
 import com.budget.Users.model.UserLogin;
 import com.budget.Users.security.JwtUtil;
 import com.budget.Users.service.UserService;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -34,15 +36,18 @@ public class UserController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<String> login (@RequestBody UserLogin userLogin){
+    public ResponseEntity<?> login (@RequestBody UserLogin userLogin,
+                                         @RequestHeader (value = "X-Forwarded-For", required = false) String xForwarderFor,
+                                         HttpServletRequest request){
         try {
-            if (userService.login(userLogin)) {
-                log.infoGeneral(String.format("User %s successfully logged in", userLogin.getEmail()));
-                return ResponseEntity.status(HttpStatus.OK).body("ok");
-            }else {
-                log.infoGeneral(String.format("Fail at login. details: %s", userLogin.toString()));
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid credentials");
-            }
+            userLogin.setIp((xForwarderFor != null && !xForwarderFor.isEmpty())
+                    ? xForwarderFor.split(",")[0].trim()
+                    : request.getRemoteAddr());
+//            System.out.println("X-forwarder: " + xForwarderFor + "\nrequest.getRemoteAddr()" + request.getRemoteAddr());
+            AuthResponse response = userService.login(userLogin);
+            return ResponseEntity.ok(response);
+        }catch (IllegalArgumentException e){
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }catch (Exception e){
             final String uuid = log.debugGeneral(e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error ref: " + uuid);

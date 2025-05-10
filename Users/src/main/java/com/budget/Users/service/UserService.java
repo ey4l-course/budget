@@ -1,20 +1,25 @@
 package com.budget.Users.service;
 
 import com.budget.Users.LogUtil;
+import com.budget.Users.model.AuthResponse;
 import com.budget.Users.model.User;
 import com.budget.Users.model.UserLogin;
 import com.budget.Users.repository.UserRepository;
+import com.budget.Users.security.JwtUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.dao.IncorrectResultSizeDataAccessException;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.bcrypt.BCrypt;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.nio.charset.StandardCharsets;
+import java.security.InvalidParameterException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.List;
 import java.util.regex.Pattern;
 
 @Service
@@ -25,6 +30,8 @@ public class UserService {
     BCryptPasswordEncoder encoder;
     @Autowired
     LogUtil log;
+    @Autowired
+    JwtUtil jwtUtil;
 
     final private Pattern validEmailRegex = Pattern.compile("^[a-zA-Z0-9-_~+.]{2,30}@[a-zA-Z0-9]{2,10}(\\.[a-zA-Z]{2,3}){1,2}$");
     final private Pattern validPasswordRegex = Pattern.compile("^(?=.*[A-Z])(?=.*[a-z])(?=.*\\d)(?=.*[-!@#$%^&*()_./]).{8,}$");
@@ -42,24 +49,23 @@ public class UserService {
         }
     }
 
-    public boolean login (UserLogin loginUser){
+    public AuthResponse login (UserLogin loginUser){
         try {
-            String storedPassword = userRepository.getUserByEmail(loginUser.getEmail());
-//            User user = userRepository.getUserByEmail(loginUser.getEmail());
-//            String storedPassword = user.getPassword();
-            if (encoder.matches(loginUser.getPassword(), storedPassword))
-                //TODO: Generate token
-                return true;
-            else
-                return false;
+            User retrievedUser = userRepository.getUserByEmail(loginUser.getEmail());
+            if (encoder.matches(loginUser.getPassword(), retrievedUser.getPassword())) {
+                String accessToken = jwtUtil.generateToken(retrievedUser.getIdentifier());
+                String refreshToken = jwtUtil.generateRefreshToken(retrievedUser.getIdentifier());
+                log.loginInfo(loginUser, "successful");
+                return new AuthResponse(accessToken, refreshToken);
+            }else{
+                log.loginInfo(loginUser, "failed (invalid password: "+loginUser.getPassword()+")");
+                throw new IllegalArgumentException();
+            }
         }catch (EmptyResultDataAccessException e) {
-            log.infoGeneral("Attempted login with non existing user: " + loginUser.getEmail());
-            return false;
+            log.loginInfo(loginUser, "failed (invalid E-mail)");
+            throw new IllegalArgumentException();
         }catch (IncorrectResultSizeDataAccessException e){
             log.warnGeneral(e, "Duplicate E-mail found in DB" + loginUser.getEmail());
-            throw e;
-        }catch (Exception e){
-            log.debugGeneral(e);
             throw e;
         }
     }

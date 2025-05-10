@@ -1,5 +1,6 @@
 package com.budget.Users;
 
+import com.budget.Users.model.UserLogin;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
@@ -43,6 +44,12 @@ public class LogUtil {
         Logger logger = LoggerFactory.getLogger(origin.getClassName());
         logger.warn("[ELK][LogID: {}] Origin: {} - {}", errorId, originInfo, msg);
         return errorId;
+    }
+
+    public void loginInfo (UserLogin user, String result){
+        String logId = UUID.randomUUID().toString();
+        Logger logger = LoggerFactory.getLogger("[info]");
+        logger.info("[sec][log ID: {}] - login {} - user id: {} - user IP: {}", logId, result, user.getEmail(), user.getIp());
     }
 
 //    public void warnSec (String message){

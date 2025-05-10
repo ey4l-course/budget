@@ -16,10 +16,14 @@ public class JwtUtil {
 
     private final String secretKey;
     private final long expirationTime;
+    private final long refreshExpirationTime;
 
-    public JwtUtil(@Value("${jwt.secret}") String secretKey, @Value("${jwt.expiration}") long expirationTime){
+    public JwtUtil(@Value("${jwt.secret}") String secretKey,
+                   @Value("${jwt.access.expiration}") long expirationTime,
+                   @Value("${jwt.refresh.expiration}") long refreshExpirationTime){
         this.secretKey = secretKey;
         this.expirationTime = expirationTime;
+        this.refreshExpirationTime = refreshExpirationTime;
     }
     private Key getSigningKey(){
         return Keys.hmacShaKeyFor(secretKey.getBytes());
@@ -30,6 +34,15 @@ public class JwtUtil {
                 .setSubject(uuid)
                 .setIssuedAt(new Date())
                 .setExpiration(new Date(System.currentTimeMillis() + expirationTime))
+                .signWith(getSigningKey(), SignatureAlgorithm.HS256)
+                .compact();
+    }
+
+    public String generateRefreshToken(String uuid) {
+        return Jwts.builder()
+                .setSubject(uuid)
+                .setIssuedAt(new Date())
+                .setExpiration(new Date(System.currentTimeMillis() + refreshExpirationTime))
                 .signWith(getSigningKey(), SignatureAlgorithm.HS256)
                 .compact();
     }
@@ -51,9 +64,9 @@ public class JwtUtil {
                 .getBody();
     }
 
-    public boolean validateToken(String token, String email) {
+    public boolean validateToken(String token, String uuid) {
         final String extractedUuid = extractUuid(token);
-        return (email.equals(extractedUuid) && !isTokenExpired(token));
+        return (uuid.equals(extractedUuid) && !isTokenExpired(token));
     }
 
     private boolean isTokenExpired(String token) {

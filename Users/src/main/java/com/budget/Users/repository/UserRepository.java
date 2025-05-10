@@ -4,7 +4,10 @@ import com.budget.Users.LogUtil;
 import com.budget.Users.model.User;
 import com.budget.Users.repository.mapper.UserMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.EmptyResultDataAccessException;
+import org.springframework.dao.IncorrectResultSizeDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Repository;
@@ -37,17 +40,9 @@ public class UserRepository {
     public void changePassword (String password, String uuid){
         String sql = "UPDATE " + TABLE + " SET password = ? WHERE uuid = ?";
     }
-//
-//    public User getUserByEmail(String hashedMail) {
-//        System.out.println("HASHED EMAIL = " + hashedMail);
-//        String sql = "SELECT * FROM " + TABLE + " WHERE hashed_email = ?";
-//        return jdbcTemplate.queryForObject(sql, new UserMapper(), hashedMail);
-////        return jdbcTemplate.queryForObject(sql, new Object[]{hashedMail}, String.class);
-//    }
-//
-    public String getUserByEmail(String hashedMail){
-        System.out.println("HASHED EMAIL = " + hashedMail);
-        String sql = "SELECT password FROM " + TABLE + " WHERE hashed_email = ?";
-        return jdbcTemplate.queryForObject(sql, new Object[]{hashedMail}, String.class);
+
+    public User getUserByEmail(String hashedMail) throws EmptyResultDataAccessException, IncorrectResultSizeDataAccessException {
+        String sql = "SELECT * FROM " + TABLE + " WHERE hashed_email = ?";
+        return jdbcTemplate.queryForObject(sql, new UserMapper(), hashedMail);
     }
 }
